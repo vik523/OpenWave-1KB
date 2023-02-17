@@ -69,9 +69,9 @@ class Oscilloscope_gw(Oscilloscope):
     
     def capture(self, im=False) -> np.array:
         if im:
-            result = self.capture_img() 
+            result = self._capture_img() 
         else:
-            result = self.capture_raw()
+            result = self._capture_raw()
         self.units = self.device.vunit
         return result
 
