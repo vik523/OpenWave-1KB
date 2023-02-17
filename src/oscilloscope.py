@@ -25,22 +25,22 @@ class Oscilloscope_gw(Oscilloscope):
         self.units = [[], []]
         return
     
-    def check_connection(self):
+    def _check_connection(self):
         if self.device.connection_status==1:
             self.connected = True
         else:
             self.connected = False
     
     def connect(self):
-        port = self.port_check(self.port)
+        port = self._port_check(self.port)
         #Connecting to a self.device.
         try:
             self.device=dso1kb.Dso(port)
-            self.check_connection()
+            self._check_connection()
         except:
             self.device=dso1kb.Dso('')
 
-    def port_check(self, port):
+    def _port_check(self, port):
         #Check interface according to config file or command line argument.
         if port == '':
             print('Error: Bad config file (add Port parameter in config)')
@@ -69,12 +69,13 @@ class Oscilloscope_gw(Oscilloscope):
     
     def capture(self, im=False) -> np.array:
         if im:
-            return self.capture_img()
+            result = self.capture_img() 
         else:
-            return self.capture_raw()
+            result = self.capture_raw()
         self.units = self.device.vunit
+        return result
 
-    def capture_raw(self):
+    def _capture_raw(self):
         self.device.iWave=[[], []]
         self.device.ch_list=[]
         #Turn on the selected channels.
@@ -85,13 +86,13 @@ class Oscilloscope_gw(Oscilloscope):
         #Get all the selected channel's raw datas.
         if(self.chanels[0]):
             self.device.getRawData(True, 1)              #Read CH1's raw data from self.device (including header).
-            self.data = np.asarray(self.device.convertWaveform(0, 1))
+            self.data[0] = np.asarray(self.device.convertWaveform(0, 1))
         if(self.chanels[1]):
             self.device.getRawData(True, 2)              #Read CH2's raw data from self.device (including header).
             self.data[1] = np.asarray(self.device.convertWaveform(1, 1))
         return self.data
     
-    def capture_img(self):
+    def _capture_img(self):
         img_type=1   #1 for RLE format, 0 for PNG format.
         if(img_type):
             self.device.write(':DISP:OUTP?\n')                 #Send command to get image from DSO.
@@ -220,4 +221,5 @@ if __name__ == '__main__':
     plt.ylabel("%s Units: %s" % (device.chanels[0],  device.units[0]))
     plt.xlabel("Time (sec)")
     plt.show()
+    device.disconect()
     print('Finish')
